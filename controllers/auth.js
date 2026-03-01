@@ -56,20 +56,55 @@ export const handleUserRegister = async (req, res) => {
 
 export const handleUserLogin = async (req, res) => {
   try {
-    // const { email, password } = req.body;
+    const { email, password } = req.body;
 
-    // if (!email || !password) {
-    //   return res.status(400).json({
-    //     msg: "missing fields",
-    //   });
-    // }
+    if (!email || !password) {
+      return res.status(400).json({
+        msg: "missing fields",
+      });
+    }
 
-    // const userExists = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
 
-    // if (!userExists) {
-    //   return res.status(400).json({
-    //     msg: "user doesnt exists",
-    //   });
-    // }
-  } catch (error) {}
+    if (!user) {
+      return res.status(400).json({
+        msg: "user doesnt exists",
+      });
+    }
+
+    const isValidPassword = await user.comparePassword(password);
+
+    if (!isValidPassword) {
+      return res.status(400).json({
+        msg: "invalid credentials",
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user._id,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "2d",
+      },
+    );
+
+    res.cookie("token", token);
+
+    return res.status(200).json({
+      token,
+      msg: "loggedin successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.log("handleUserLogin error:-", error);
+    return res.status(500).json({
+      msg: error.message,
+    });
+  }
 };
