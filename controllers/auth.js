@@ -1,3 +1,4 @@
+import { sendEmail } from "../config/email.js";
 import User from "../models/user.js";
 import jwt from "jsonwebtoken";
 
@@ -24,6 +25,8 @@ export const handleUserRegister = async (req, res) => {
       name,
       password,
     });
+
+    sendEmail(email, "Registered Successfully");
 
     const token = jwt.sign(
       {
