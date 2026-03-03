@@ -20,13 +20,18 @@ export const handleUserRegister = async (req, res) => {
       });
     }
 
-    const user = await User.create({
+    let user = await User.create({
       email,
       name,
       password,
     });
 
     sendEmail(email, "Registered Successfully");
+
+    user = {
+      ...user._doc,
+      password: undefined,
+    };
 
     const token = jwt.sign(
       {
@@ -67,7 +72,7 @@ export const handleUserLogin = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email }).select("+password");
+    let user = await User.findOne({ email }).select("+password");
 
     if (!user) {
       return res.status(400).json({
@@ -83,9 +88,14 @@ export const handleUserLogin = async (req, res) => {
       });
     }
 
+    user = {
+      ...user._doc,
+      password: undefined,
+    };
+
     const token = jwt.sign(
       {
-        userId: user._id,
+        user,
       },
       process.env.JWT_SECRET,
       {
