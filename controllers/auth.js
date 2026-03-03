@@ -30,7 +30,7 @@ export const handleUserRegister = async (req, res) => {
 
     const token = jwt.sign(
       {
-        userId: user._id,
+        user,
       },
       process.env.JWT_SECRET,
       {
