@@ -1,4 +1,5 @@
 import { Account } from "../models/account.js";
+import { Ledger } from "../models/ledger.js";
 import { Transaction } from "../models/transaction.js";
 
 export const createTransaction = async (req, res) => {
@@ -69,9 +70,61 @@ export const createTransaction = async (req, res) => {
       });
     }
 
+    // sender balance from ledger
+    const balance = await fromUserAccount.getBalance();
+
+    if (balance < amount) {
+      return res.status(400).json({
+        msg: `insufficient amount . Current balance is ${balance}`,
+      });
+    }
+
+    // create transaction
+
+    const session = await Transaction.startSession();
+    session.startTransaction();
+
+    const transaction = await Transaction.create(
+      {
+        fromAccount,
+        toAccount,
+        amount,
+        idempotencyKey,
+        status: "PENDING",
+      },
+      { session },
+    );
+
+    const debitLedgerEntry = await Ledger.create(
+      {
+        account: fromAccount,
+        amount,
+        type: "DEBIT",
+        transaction: transaction._id,
+      },
+      { session },
+    );
+
+    const creditLedgerEntry = await Ledger.create(
+      {
+        account: toAccount,
+        amount,
+        type: "CREDIT",
+        transaction: transaction._id,
+      },
+      { session },
+    );
+
+    transaction.status = "COMPLETED";
+    await transaction.save({ session });
+
+    await session.commitTransaction();
+    session.endSession()
 
 
-    
+
+
+
   } catch (error) {
     console.log("createTransaction error:-", error);
     return res.status(500).json({
