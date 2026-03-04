@@ -26,7 +26,7 @@ export const handleUserRegister = async (req, res) => {
       password,
     });
 
-    sendEmail(email, "Registered Successfully");
+    sendEmail(email, "Registration Successful");
 
     user = {
       ...user._doc,

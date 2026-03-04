@@ -1,3 +1,4 @@
+import { sendEmail } from "../config/email.js";
 import { Account } from "../models/account.js";
 import { Ledger } from "../models/ledger.js";
 import { Transaction } from "../models/transaction.js";
@@ -119,12 +120,14 @@ export const createTransaction = async (req, res) => {
     await transaction.save({ session });
 
     await session.commitTransaction();
-    session.endSession()
+    session.endSession();
 
+    return res.status(200).json({
+      msg: "transaction completed successfully",
+      transaction,
+    });
 
-
-
-
+    
   } catch (error) {
     console.log("createTransaction error:-", error);
     return res.status(500).json({

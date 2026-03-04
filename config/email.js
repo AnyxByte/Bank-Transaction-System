@@ -15,20 +15,8 @@ export async function sendEmail(to, subject) {
           <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
             
             <h2 style="color: #333; text-align: center;">
-              🎉 Registration Successful
+              🎉 ${subject}
             </h2>
-
-            <p style="font-size: 16px; color: #555;">
-              Hello,
-            </p>
-
-            <p style="font-size: 16px; color: #555;">
-              Your account has been successfully created. You are now ready to explore and get started.
-            </p>
-
-            <p style="font-size: 14px; color: #888;">
-              If you did not create this account, please ignore this email.
-            </p>
 
             <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
 
