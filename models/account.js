@@ -52,6 +52,8 @@ accountSchema.methods.getBalance = async function getBalance() {
           },
         },
       },
+    },
+    {
       $project: {
         _id: 0,
         balance: {
@@ -60,8 +62,6 @@ accountSchema.methods.getBalance = async function getBalance() {
       },
     },
   ]);
-
-  console.log("balance", balance);
 
   if (balance.length == 0) {
     return 0;
