@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { connectDb } from "./config/db.js";
 import authRouter from "./routes/auth.js";
 import accountRouter from "./routes/account.js";
+import transactionRouter from "./routes/transaction.js";
 import cookieParser from "cookie-parser";
 import { auth } from "./middlewares/auth.js";
 dotenv.config();
@@ -17,6 +18,7 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
 app.use("/api/accounts", auth, accountRouter);
+app.use("/api/transactions", auth, transactionRouter);
 
 app.listen(port, () => {
   console.log(`server started on port ${port}`);

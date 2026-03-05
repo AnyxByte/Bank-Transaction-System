@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { sendEmail } from "../config/email.js";
 import { Account } from "../models/account.js";
 import { Ledger } from "../models/ledger.js";
@@ -82,10 +83,10 @@ export const createTransaction = async (req, res) => {
 
     // create transaction
 
-    const session = await Transaction.startSession();
+    const session = await mongoose.startSession();
     session.startTransaction();
 
-    const transaction = await Transaction.create(
+    let transaction = await Transaction.create(
       {
         fromAccount,
         toAccount,
@@ -122,14 +123,95 @@ export const createTransaction = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    return res.status(200).json({
+    return res.status(201).json({
       msg: "transaction completed successfully",
       transaction,
     });
-
-    
   } catch (error) {
     console.log("createTransaction error:-", error);
+    return res.status(500).json({
+      msg: error.message,
+    });
+  }
+};
+
+export const createInitialFunds = async (req, res) => {
+  try {
+    const { toAccount, amount, idempotencyKey } = req.body;
+
+    if (!toAccount || !amount || !idempotencyKey) {
+      return res.status(400).json({
+        msg: "missing fields",
+      });
+    }
+
+    // validity of toAccount
+    const toUserAccount = await Account.findById(toAccount);
+    if (!toUserAccount) {
+      return res.status(400).json({
+        msg: "No such account",
+      });
+    }
+
+    const fromUserAccount = await Account.findOne({
+      user: req.user._id,
+    });
+
+    if (!fromUserAccount) {
+      return res.status(400).json({
+        msg: "No system user",
+      });
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    let transaction = new Transaction({
+      amount,
+      toAccount,
+      fromAccount: fromUserAccount._id,
+      idempotencyKey,
+      status: "PENDING",
+    });
+
+    await transaction.save({ session });
+
+    const debitLedgerEntry = await Ledger.create(
+      [
+        {
+          amount,
+          account: fromUserAccount._id,
+          transaction: transaction._id,
+          type: "DEBIT",
+        },
+      ],
+      { session },
+    );
+
+    const creditLedgerEntry = await Ledger.create(
+      [
+        {
+          amount,
+          account: toAccount,
+          transaction: transaction._id,
+          type: "CREDIT",
+        },
+      ],
+      { session },
+    );
+
+    transaction.status = "COMPLETED";
+    await transaction.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json({
+      msg: "deposited successfully",
+      transaction,
+    });
+  } catch (error) {
+    console.log("createInitialFunds error:-", error);
     return res.status(500).json({
       msg: error.message,
     });

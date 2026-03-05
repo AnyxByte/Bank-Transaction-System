@@ -19,3 +19,17 @@ export const createAccount = async (req, res) => {
     });
   }
 };
+
+export const fetchUserAccounts = async (req, res) => {
+  try {
+    const accounts = await Account.find({ user: req.user._id });
+    return res.status(200).json({
+      accounts,
+    });
+  } catch (error) {
+    console.log("error at fetchUserAccounts", error);
+    return res.status(500).json({
+      msg: "error at fetching user accounts",
+    });
+  }
+};
