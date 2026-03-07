@@ -18,7 +18,7 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
 app.use("/api/accounts", auth, accountRouter);
-app.use("/api/transactions", auth, transactionRouter);
+app.use("/api/transactions", transactionRouter);
 
 app.listen(port, () => {
   console.log(`server started on port ${port}`);

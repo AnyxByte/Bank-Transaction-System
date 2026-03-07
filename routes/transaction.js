@@ -3,11 +3,11 @@ import {
   createTransaction,
   createInitialFunds,
 } from "../controllers/transaction.js";
-import { authSystemUser } from "../middlewares/auth.js";
+import { auth, authSystemUser } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-router.post("/create", createTransaction);
+router.post("/create", auth, createTransaction);
 
 router.post("/deposit", authSystemUser, createInitialFunds);
 

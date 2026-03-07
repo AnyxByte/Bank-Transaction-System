@@ -86,34 +86,37 @@ export const createTransaction = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    let transaction = await Transaction.create(
-      {
-        fromAccount,
-        toAccount,
-        amount,
-        idempotencyKey,
-        status: "PENDING",
-      },
-      { session },
-    );
+    const transaction = new Transaction({
+      fromAccount,
+      toAccount,
+      amount,
+      idempotencyKey,
+      status: "PENDING",
+    });
+
+    await transaction.save({ session });
 
     const debitLedgerEntry = await Ledger.create(
-      {
-        account: fromAccount,
-        amount,
-        type: "DEBIT",
-        transaction: transaction._id,
-      },
+      [
+        {
+          account: fromAccount,
+          amount,
+          type: "DEBIT",
+          transaction: transaction._id,
+        },
+      ],
       { session },
     );
 
     const creditLedgerEntry = await Ledger.create(
-      {
-        account: toAccount,
-        amount,
-        type: "CREDIT",
-        transaction: transaction._id,
-      },
+      [
+        {
+          account: toAccount,
+          amount,
+          type: "CREDIT",
+          transaction: transaction._id,
+        },
+      ],
       { session },
     );
 
@@ -166,9 +169,9 @@ export const createInitialFunds = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    let transaction = new Transaction({
+    const transaction = new Transaction({
       amount,
-      toAccount,
+      toAccount: toUserAccount._id,
       fromAccount: fromUserAccount._id,
       idempotencyKey,
       status: "PENDING",
@@ -192,7 +195,7 @@ export const createInitialFunds = async (req, res) => {
       [
         {
           amount,
-          account: toAccount,
+          account: toUserAccount._id,
           transaction: transaction._id,
           type: "CREDIT",
         },
